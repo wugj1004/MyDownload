@@ -32,7 +32,6 @@ public class AndroidOPermissionActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         // 弹窗
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.REQUEST_INSTALL_PACKAGES}, INSTALL_PACKAGES_REQUESTCODE);
         } else {

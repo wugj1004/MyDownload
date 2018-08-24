@@ -63,6 +63,13 @@ public class MainActivity extends AppCompatActivity {
         mDownloadManager.onPause();
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mDownloadManager.cancel();
+    }
+
+
     private void showDownloadManagerDialog() {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
