@@ -17,6 +17,7 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".myDownloadManager.AndroidOPermissionActivity"/>
     </application>
 
     <!--访问权限-->
