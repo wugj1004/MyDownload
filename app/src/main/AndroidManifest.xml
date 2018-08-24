@@ -21,6 +21,7 @@
 
 
         <!-- Android 7.0 照片、APK下载保存路径-->
+        <!--android:authorities="对应的包名.fileprovider"-->
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="com.wugj.download.fileProvider"

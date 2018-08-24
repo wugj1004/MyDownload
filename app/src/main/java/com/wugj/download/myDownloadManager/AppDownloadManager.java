@@ -24,7 +24,9 @@ public class AppDownloadManager {
     public static final String TAG = "AppDownloadManager";
     private WeakReference<Activity> weakReference;
     private DownloadManager mDownloadManager;
+    //下载进度观察
     private DownloadChangeObserver mDownLoadChangeObserver;
+    //
     private DownloadReceiver mDownloadReceiver;
     private long mReqId;
     private OnUpdateListener mUpdateListener;
@@ -43,6 +45,11 @@ public class AppDownloadManager {
      */
     public void setUpdateListener(OnUpdateListener mUpdateListener) {
         this.mUpdateListener = mUpdateListener;
+        if (mDownLoadChangeObserver != null){
+            mDownLoadChangeObserver.setUpdateListener(mUpdateListener);
+        }else{
+            Log.e(TAG,"先初始化下载");
+        }
     }
 
     //apk文件下载
@@ -58,9 +65,7 @@ public class AppDownloadManager {
         }
 
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(apkUrl));
-        //设置title
         request.setTitle(title);
-        // 设置描述
         request.setDescription(desc);
         // 完成后显示通知栏
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
@@ -71,9 +76,12 @@ public class AppDownloadManager {
         // request.setDestinationInExternalPublicDir("/codoon/","codoon_health.apk");
 
         request.setMimeType("application/vnd.android.package-archive");
-        // 获取下载对应ID，mReqId会通过系统保存，开发过程中可通过sharedpreference保存mReqId，痛殴sharedPreference获取mReqId；
+        // 获取下载对应ID，mReqId由系统通过数据库持久化保存，开发过程中可通过sharedpreference保存mReqId，痛殴sharedPreference获取mReqId；
         // 以此解决重复下载，或者其他操作。
         mReqId = mDownloadManager.enqueue(request);
+
+        mDownLoadChangeObserver.setDownloadManager(mDownloadManager);
+        mDownLoadChangeObserver.setDownloadManagerEnqueueId(mReqId);
     }
 
     /**
@@ -101,51 +109,6 @@ public class AppDownloadManager {
         weakReference.get().getContentResolver().unregisterContentObserver(mDownLoadChangeObserver);
         weakReference.get().unregisterReceiver(mDownloadReceiver);
     }
-
-
-    /**
-     * 观察者观察更新下载进度
-     */
-    class DownloadChangeObserver extends ContentObserver {
-
-        public DownloadChangeObserver(Handler handler) {
-            super(handler);
-        }
-
-        @Override
-        public void onChange(boolean selfChange) {
-            super.onChange(selfChange);
-            updateView();
-        }
-        //更新下载进度
-        private void updateView() {
-            int[] bytesAndStatus = new int[]{0, 0, 0};
-            DownloadManager.Query query = new DownloadManager.Query().setFilterById(mReqId);
-            Cursor c = null;
-            try {
-                c = mDownloadManager.query(query);
-                if (c != null && c.moveToFirst()) {
-                    //已经下载的字节数
-                    bytesAndStatus[0] = c.getInt(c.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
-                    //总需下载的字节数
-                    bytesAndStatus[1] = c.getInt(c.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
-                    //状态所在的列索引
-                    bytesAndStatus[2] = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));
-                }
-            } finally {
-                if (c != null) {
-                    c.close();
-                }
-            }
-            //下载进度回调
-            if (mUpdateListener != null) {
-                mUpdateListener.update(bytesAndStatus[0], bytesAndStatus[1]);
-            }
-
-            Log.i(TAG, "下载进度：" + bytesAndStatus[0] + "/" + bytesAndStatus[1] + "");
-        }
-    }
-
 
     /**
      * 注册广播通知下载完成
