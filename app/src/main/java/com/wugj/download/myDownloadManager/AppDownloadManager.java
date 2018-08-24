@@ -71,7 +71,8 @@ public class AppDownloadManager {
         // request.setDestinationInExternalPublicDir("/codoon/","codoon_health.apk");
 
         request.setMimeType("application/vnd.android.package-archive");
-        //获取下载人物ID
+        // 获取下载对应ID，mReqId会通过系统保存，开发过程中可通过sharedpreference保存mReqId，痛殴sharedPreference获取mReqId；
+        // 以此解决重复下载，或者其他操作。
         mReqId = mDownloadManager.enqueue(request);
     }
 
@@ -161,7 +162,7 @@ public class AppDownloadManager {
                 haveInstallPermission = context.getPackageManager().canRequestPackageInstalls();
                 if (!haveInstallPermission) {//没有权限
                     // 弹窗，并去设置页面授权
-                    final AndroidOInstallPermissionListener listener = new AndroidOInstallPermissionListener() {
+                    AndroidOInstallPermissionListener listener = new AndroidOInstallPermissionListener() {
                         @Override
                         public void permissionSuccess() {
                             installApk(context, intent);

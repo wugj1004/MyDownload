@@ -66,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
+        //每次退出页面就会取消下载操作
         mDownloadManager.cancel();
     }
 
