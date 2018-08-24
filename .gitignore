@@ -13,3 +13,4 @@ gen/
 local.properties
 gradlew*
 inner/
+*/release

@@ -29,6 +29,7 @@ public class AppDownloadManager {
     private long mReqId;
     private OnUpdateListener mUpdateListener;
 
+    static String FILE_NAME = "app_name.apk";
     public AppDownloadManager(Activity activity) {
         weakReference = new WeakReference<Activity>(activity);
         mDownloadManager = (DownloadManager) weakReference.get().getSystemService(Context.DOWNLOAD_SERVICE);
@@ -36,16 +37,24 @@ public class AppDownloadManager {
         mDownloadReceiver = new DownloadReceiver();
     }
 
+    /**
+     * 下载进度监听
+     * @param mUpdateListener
+     */
     public void setUpdateListener(OnUpdateListener mUpdateListener) {
         this.mUpdateListener = mUpdateListener;
     }
 
+    //apk文件下载
     public void downloadApk(String apkUrl, String title, String desc) {
         // fix bug : 装不了新版本，在下载之前应该删除已有文件
-        File apkFile = new File(weakReference.get().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "app_name.apk");
-
-        if (apkFile != null && apkFile.exists()) {
-            apkFile.delete();
+        File apkFile = new File(weakReference.get().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), FILE_NAME);
+        if (apkFile.exists()) {
+            if (apkFile.delete()) {
+                System.out.println("删除单个文件成功！");
+            } else {
+                System.out.println("删除单个文件失败！");
+            }
         }
 
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(apkUrl));
@@ -55,14 +64,14 @@ public class AppDownloadManager {
         request.setDescription(desc);
         // 完成后显示通知栏
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-        request.setDestinationInExternalFilesDir(weakReference.get(), Environment.DIRECTORY_DOWNLOADS, "app_name.apk");
+        request.setDestinationInExternalFilesDir(weakReference.get(), Environment.DIRECTORY_DOWNLOADS, FILE_NAME);
         //在手机SD卡上创建一个download文件夹
         // Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).mkdir() ;
         //指定下载到SD卡的/download/my/目录下
         // request.setDestinationInExternalPublicDir("/codoon/","codoon_health.apk");
 
         request.setMimeType("application/vnd.android.package-archive");
-        //
+        //获取下载人物ID
         mReqId = mDownloadManager.enqueue(request);
     }
 
@@ -92,40 +101,12 @@ public class AppDownloadManager {
         weakReference.get().unregisterReceiver(mDownloadReceiver);
     }
 
-    private void updateView() {
-        int[] bytesAndStatus = new int[]{0, 0, 0};
-        DownloadManager.Query query = new DownloadManager.Query().setFilterById(mReqId);
-        Cursor c = null;
-        try {
-            c = mDownloadManager.query(query);
-            if (c != null && c.moveToFirst()) {
-                //已经下载的字节数
-                bytesAndStatus[0] = c.getInt(c.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
-                //总需下载的字节数
-                bytesAndStatus[1] = c.getInt(c.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
-                //状态所在的列索引
-                bytesAndStatus[2] = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));
-            }
-        } finally {
-            if (c != null) {
-                c.close();
-            }
-        }
 
-        if (mUpdateListener != null) {
-            mUpdateListener.update(bytesAndStatus[0], bytesAndStatus[1]);
-        }
-
-        Log.i(TAG, "下载进度：" + bytesAndStatus[0] + "/" + bytesAndStatus[1] + "");
-    }
-
+    /**
+     * 观察者观察更新下载进度
+     */
     class DownloadChangeObserver extends ContentObserver {
 
-        /**
-         * Creates a content observer.
-         *
-         * @param handler The handler to run {@link #onChange} on, or null if none.
-         */
         public DownloadChangeObserver(Handler handler) {
             super(handler);
         }
@@ -135,8 +116,39 @@ public class AppDownloadManager {
             super.onChange(selfChange);
             updateView();
         }
+        //更新下载进度
+        private void updateView() {
+            int[] bytesAndStatus = new int[]{0, 0, 0};
+            DownloadManager.Query query = new DownloadManager.Query().setFilterById(mReqId);
+            Cursor c = null;
+            try {
+                c = mDownloadManager.query(query);
+                if (c != null && c.moveToFirst()) {
+                    //已经下载的字节数
+                    bytesAndStatus[0] = c.getInt(c.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+                    //总需下载的字节数
+                    bytesAndStatus[1] = c.getInt(c.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+                    //状态所在的列索引
+                    bytesAndStatus[2] = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));
+                }
+            } finally {
+                if (c != null) {
+                    c.close();
+                }
+            }
+            //下载进度回调
+            if (mUpdateListener != null) {
+                mUpdateListener.update(bytesAndStatus[0], bytesAndStatus[1]);
+            }
+
+            Log.i(TAG, "下载进度：" + bytesAndStatus[0] + "/" + bytesAndStatus[1] + "");
+        }
     }
 
+
+    /**
+     * 注册广播通知下载完成
+     */
     class DownloadReceiver extends BroadcastReceiver {
 
         @Override
@@ -157,7 +169,6 @@ public class AppDownloadManager {
 
                         @Override
                         public void permissionFail() {
-
                             Toast.makeText(context,"授权失败，无法安装应用",Toast.LENGTH_SHORT).show();
                         }
                     };
@@ -177,6 +188,7 @@ public class AppDownloadManager {
     }
 
     /**
+     * 应用安装
      * @param context
      * @param intent
      */
@@ -197,15 +209,16 @@ public class AppDownloadManager {
                 uri = Uri.fromFile(apkFile);
             } else { // Android 7.0 以上
                 uri = FileProvider.getUriForFile(context,
-                        "package_name.fileProvider",
-                        new File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "app_name.apk"));
+                        "com.wugj.download.fileProvider",
+                        new File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), FILE_NAME));
                 intentInstall.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
             }
 
             // 安装应用
-            Log.e("zhouwei", "下载完成了");
+            Log.e("AppDownloadManager", "下载完成了");
 
             intentInstall.setDataAndType(uri, "application/vnd.android.package-archive");
+            //调用安装界面
             context.startActivity(intentInstall);
         }
     }
@@ -232,6 +245,8 @@ public class AppDownloadManager {
         }
         return targetApkFile;
     }
+
+
 
     public interface OnUpdateListener {
         void update(int currentByte, int totalByte);

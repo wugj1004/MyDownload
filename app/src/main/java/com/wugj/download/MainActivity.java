@@ -1,4 +1,7 @@
 package com.wugj.download;
+/**
+ * 8.0系统在没有打开开发者模式的前提下，安装app必须要有签名文件
+ */
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -10,6 +13,8 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.wugj.download.myDownloadManager.AppDownloadManager;
+
 public class MainActivity extends AppCompatActivity {
 
     String title = "app name";
@@ -18,11 +23,15 @@ public class MainActivity extends AppCompatActivity {
 
     String Tag = MainActivity.class.getSimpleName();
     MainActivity instance;
+
+    AppDownloadManager mDownloadManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         instance = this;
+        mDownloadManager = new AppDownloadManager(instance);
 
         //downloadManager-更新
         findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
@@ -42,8 +51,20 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mDownloadManager.resume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mDownloadManager.onPause();
+    }
 
     private void showDownloadManagerDialog() {
+
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setIcon(R.mipmap.ic_launcher);
         builder.setTitle("提示");
@@ -55,16 +76,17 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
-                /*mDownloadManager.setUpdateListener(new AppDownloadManager.OnUpdateListener() {
+                mDownloadManager.setUpdateListener(new AppDownloadManager.OnUpdateListener() {
                     @Override
                     public void update(int currentByte, int totalByte) {
                         Log.e(Tag,"currentByte:"+currentByte+";totalByte:"+totalByte);
                         if ((currentByte == totalByte) && totalByte != 0) {
                             //加载完毕
+                            showToast("下载完成");
                         }
                     }
                 });
-                mDownloadManager.downloadApk(download_url, title, desc);*/
+                mDownloadManager.downloadApk(download_url, title, desc);
 
 
             }
@@ -72,6 +94,7 @@ public class MainActivity extends AppCompatActivity {
         builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                mDownloadManager.cancel();
                 showToast("取消");
             }
         });

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+
+    <!--path：需要临时授权访问的路径（.代表所有路径） name：就是你给这个访问路径起个名字-->
+    <external-files-path name="Download" path="." />
+    <!--代表外部存储区域的根目录下的文件 Environment.getExternalStorageDirectory()/DCIM/camera目录-->
+    <external-path name="hm_camera" path="DCIM/camera" />
+    <!--代表外部存储区域的根目录下的文件 Environment.getExternalStorageDirectory()/Pictures/pic目录-->
+    <external-path name="hm_pic" path="Pictures/pic" />
+</paths>
