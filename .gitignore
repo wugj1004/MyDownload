@@ -1,0 +1,15 @@
+
+gradle/wrapper/
+build/
+bin/
+gen/
+.gradle/
+.idea/
+*.apk
+*.iml
+*.DS_Store
+*.swp
+*.swo
+local.properties
+gradlew*
+inner/
