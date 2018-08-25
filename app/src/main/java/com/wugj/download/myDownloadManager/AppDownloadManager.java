@@ -52,7 +52,12 @@ public class AppDownloadManager {
         }
     }
 
-    //apk文件下载
+    /**
+     * apk文件下载
+     * @param apkUrl：下载地址
+     * @param title
+     * @param desc：下载描述
+     */
     public void downloadApk(String apkUrl, String title, String desc) {
         // fix bug : 装不了新版本，在下载之前应该删除已有文件
         File apkFile = new File(weakReference.get().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), FILE_NAME);
