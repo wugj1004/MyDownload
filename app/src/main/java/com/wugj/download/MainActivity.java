@@ -14,6 +14,8 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.wugj.download.myDownloadManager.AppDownloadManager;
+import com.wugj.download.myOkhttp.NotificationUtil;
+import com.wugj.download.myOkhttp.OkHttpDownloadInstallManager;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -25,13 +27,14 @@ public class MainActivity extends AppCompatActivity {
     MainActivity instance;
 
     AppDownloadManager mDownloadManager;
-
+    OkHttpDownloadInstallManager mOkHttpDownloadInstallManager;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         instance = this;
         mDownloadManager = new AppDownloadManager(instance);
+        mOkHttpDownloadInstallManager = new OkHttpDownloadInstallManager(this);
 
         //downloadManager-更新
         findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
@@ -67,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         //每次退出页面就会取消下载操作
-        mDownloadManager.cancel();
+//        mDownloadManager.cancel();
     }
 
 
@@ -115,6 +118,8 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void showOkHttpDownloadDialog() {
+        NotificationUtil notifyUtil = initNotification();
+
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         builder.setIcon(R.mipmap.ic_launcher);
         builder.setTitle("提示");
@@ -126,6 +131,37 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
+                mOkHttpDownloadInstallManager.downloadFile(download_url, new OkHttpDownloadInstallManager.OnDownloadListener() {
+                    @Override
+                    public void onDownloadSuccess() {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                showToast("完成");
+                                mOkHttpDownloadInstallManager.verifyVersionInstall();
+                                //下载完成安装
+                                notifyUtil.cancelById();
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onDownloading(int progress) {
+                        Log.e(Tag,"下载进度:"+progress);
+                        notifyUtil.setDownloadProcess(progress);
+                    }
+
+                    @Override
+                    public void onDownloadFailed() {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                showToast("失败");
+                                notifyUtil.cancelById();
+                            }
+                        });
+                    }
+                });
             }
         });
         builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
@@ -137,6 +173,11 @@ public class MainActivity extends AppCompatActivity {
         builder.show();
     }
 
+    private NotificationUtil initNotification(){
+        NotificationUtil notifyUtil = new NotificationUtil(instance);
+        notifyUtil .postDownloadNotification();
+        return notifyUtil;
+    }
 
 
 
