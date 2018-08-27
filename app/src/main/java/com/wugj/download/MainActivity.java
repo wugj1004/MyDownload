@@ -175,7 +175,6 @@ public class MainActivity extends AppCompatActivity {
 
     private NotificationUtil initNotification(){
         NotificationUtil notifyUtil = new NotificationUtil(instance);
-        notifyUtil .postDownloadNotification();
         return notifyUtil;
     }
 
