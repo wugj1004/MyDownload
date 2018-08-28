@@ -106,7 +106,7 @@ public class DownloadActivity extends Activity  implements View.OnClickListener{
                     public void onComplete() {
                         if (downloadInfo != null) {
                             Toast.makeText(instance,
-                                    downloadInfo.getFileName() + Uri.encode("下载完成"),
+                                    downloadInfo.getFileName() + "下载完成",
                                     Toast.LENGTH_SHORT).show();
                         }
                     }
