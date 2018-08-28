@@ -5,6 +5,7 @@ package com.wugj.download;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,14 +15,14 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.wugj.download.myDownloadManager.AppDownloadManager;
-import com.wugj.download.myOkhttp.NotificationUtil;
-import com.wugj.download.myOkhttp.OkHttpDownloadInstallManager;
+import com.wugj.download.myOkhttp.apkInstall.NotificationUtil;
+import com.wugj.download.myOkhttp.apkInstall.OkHttpDownloadInstallManager;
 
 public class MainActivity extends AppCompatActivity {
 
     String title = "app name";
     String desc = "版本更新";
-    String download_url = "https://hz-app.oss-cn-beijing.aliyuncs.com/update/zhushou/non_custom/officeb-release-4.2.1.apk";
+    String download_url = "https://hz-app.oss-cn-beijing.aliyuncs.com/update/zhushou/non_custom/officeb-release-4.3.1.apk";
 
     String Tag = MainActivity.class.getSimpleName();
     MainActivity instance;
@@ -49,6 +50,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 showOkHttpDownloadDialog();
+            }
+        });
+
+        //多线程断点续传
+        findViewById(R.id.button3).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent();
+                intent.setClass(instance,DownloadActivity.class);
+                startActivity(intent);
             }
         });
 

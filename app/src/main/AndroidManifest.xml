@@ -3,6 +3,7 @@
     package="com.wugj.download">
 
     <application
+        android:name=".MyApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -19,6 +20,7 @@
 
         <activity android:name=".myDownloadManager.AndroidOPermissionActivity"/>
 
+        <activity android:name=".DownloadActivity"/>
 
         <!-- Android 7.0 照片、APK下载保存路径-->
         <!--android:authorities="对应的包名.fileprovider"-->
